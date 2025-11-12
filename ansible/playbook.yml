@@ -92,21 +92,28 @@
 
 - name: Deploy web-app image
   hosts: webservers
-  become: false
+  become: true
   tasks:
-    - name: Pull web-app image
-      become: true
-      community.general.podman_image:
-        name: ghcr.io/daanhollands/htf-2025:latest
-        state: present
 
-    - name: Ensure web-app container is running
-      become: true
-      community.general.podman_container:
-        name: htf-2025
-        image: ghcr.io/daanhollands/htf-2025:latest
-        state: started
-        restart_policy: unless-stopped
-        detach: true
-        ports:
-          - "80:3000"
+    - name: Pull web-app image
+      shell: |
+        podman pull ghcr.io/daanhollands/htf-2025:latest
+      args:
+        warn: false
+
+    - name: Stop existing container if running
+      shell: |
+        podman stop htf-2025 || true
+        podman rm htf-2025 || true
+      args:
+        warn: false
+
+    - name: Run web-app container
+      shell: |
+        podman run -d \
+          --name htf-2025 \
+          -p 80:3000 \
+          --restart unless-stopped \
+          ghcr.io/daanhollands/htf-2025:latest
+      args:
+        warn: false
