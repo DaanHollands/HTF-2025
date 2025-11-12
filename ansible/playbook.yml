@@ -9,7 +9,6 @@
       - python-devel 
       - python3-pip
       - python3-augeas 
-      - python3-virtualenv
       - gcc
 
   tasks:
