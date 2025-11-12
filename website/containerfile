@@ -1,0 +1,39 @@
+# Containerfile for building and running the SvelteKit site in htf-2025
+# Multi-stage build: build with full toolchain, then produce a slim runtime image.
+
+FROM node:20-bullseye-slim AS build
+WORKDIR /app
+
+# Install build tools needed by some native deps (esbuild, etc.)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 build-essential ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the site source into the image
+COPY htf-2025/ ./htf-2025/
+
+WORKDIR /app/htf-2025
+
+# Install dependencies and build
+RUN npm ci --prefer-offline --no-audit --progress=false
+RUN npm run build
+
+# Final runtime image
+FROM node:20-bullseye-slim AS runtime
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Copy built app and installed production deps
+COPY --from=build /app/htf-2025/build ./build
+COPY --from=build /app/htf-2025/node_modules ./node_modules
+COPY --from=build /app/htf-2025/package*.json ./
+
+# Use unprivileged user from node image
+USER node
+
+EXPOSE 3000
+
+# Start the SvelteKit adapter-node build
+CMD ["node", "build"]
