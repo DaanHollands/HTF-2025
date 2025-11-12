@@ -94,7 +94,15 @@
   hosts: webservers
   become: true
   tasks:
-    - name: Copy NGINX config from template
+    - name: Ensure NGINX config directory exists
+      ansible.builtin.file:
+        path: /etc/nginx/sites-available
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Deploy NGINX config from template
       ansible.builtin.template:
         src: configs/nginx.conf.j2
         dest: /etc/nginx/sites-available/default
