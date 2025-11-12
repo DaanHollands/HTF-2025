@@ -79,7 +79,7 @@
 
     - name: Obtain and install SSL certificate using Certbot (interactive step)
       ansible.builtin.command:
-        cmd: certbot --nginx --non-interactive --agree-tos -m test@test.test -d www16.htf25.qubr.be
+        cmd: certbot --nginx --non-interactive --agree-tos -m vince3sen@gmail.com -d www16.htf25.qubr.be
       register: certbot_result
       changed_when: "'Congratulations' in certbot_result.stdout"
 
