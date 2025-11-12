@@ -7,7 +7,7 @@
       - podman
       - python3 
       - python-devel 
-      - augeas-devel 
+      - python3-augeas 
       - gcc
 
   tasks:
