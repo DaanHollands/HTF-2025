@@ -1,5 +1,7 @@
 - name: Install Required Packages
   hosts: webservers
+  collections:
+    - containers.podman
   become: true
   vars:
     packages:
@@ -23,11 +25,6 @@
         name: nginx
         state: started
 
-- name: Deploy NGINX configuration
-  hosts: webservers
-  become: true
-
-  tasks:
     - name: Copy NGINX config file
       ansible.builtin.copy:
         src: configs/nginx_http.conf
@@ -44,11 +41,6 @@
     - name: Reload NGINX
       ansible.builtin.shell: nginx -t && systemctl reload nginx
 
-
-- name: Install and configure Certbot with NGINX
-  hosts: webservers
-  become: true
-  tasks:
     - name: Create Certbot virtual environment directory
       ansible.builtin.file:
         path: /opt/certbot
@@ -90,10 +82,6 @@
         create: yes
         state: present
 
-- name: Configure NGINX as reverse proxy
-  hosts: webservers
-  become: true
-  tasks:
     - name: Ensure NGINX sites-available directory exists
       ansible.builtin.file:
         path: /etc/nginx/sites-available
@@ -136,13 +124,6 @@
         name: nginx
         state: reloaded
 
-- name: Deploy web-app container with Podman
-  hosts: webservers
-  become: true
-  collections:
-    - community.general
-
-  tasks:
     - name: Pull web-app image
       containers.podman.podman_image:
         name: ghcr.io/daanhollands/htf-2025:latest
