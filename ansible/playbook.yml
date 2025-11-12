@@ -1,89 +1,40 @@
-- name: Deploy SvelteKit app with NGINX and HTTPS
+- name: Install Required Packages
   hosts: webservers
-  become: true
   collections:
     - containers.podman
-
+  become: true
   vars:
     packages:
       - nginx
       - podman
-      - python3
-      - python3-devel
+      - python3 
+      - python-devel 
       - python3-pip
-      - python3-augeas
+      - python3-augeas 
       - gcc
 
-    app_image: ghcr.io/daanhollands/htf-2025:latest
-    container_name: htf-2025
-    app_port: 3000
-    server_name: www16.htf25.qubr.be
-    cert_email: vince3sen@gmail.com
-
   tasks:
-    - name: Install required packages
+    - name: Ensure required packages are installed
       package:
         name: "{{ packages }}"
         state: present
+      tags: packages
 
-    - name: Ensure NGINX is installed and running
+    - name: Ensure NGINX is up and running
       service:
         name: nginx
         state: started
-        enabled: yes
 
-    - name: Ensure Podman container is running
-      containers.podman.podman_container:
-        name: "{{ container_name }}"
-        image: "{{ app_image }}"
-        state: started
-        detach: true
-        restart_policy: unless-stopped
-        ports:
-          - "{{ app_port }}:{{ app_port }}"
-        pull: true
-
-    - name: Ensure NGINX sites-available directory exists
-      ansible.builtin.file:
-        path: /etc/nginx/sites-available
-        state: directory
-        owner: root
-        group: root
-        mode: '0755'
-
-    - name: Ensure NGINX sites-enabled directory exists
-      ansible.builtin.file:
-        path: /etc/nginx/sites-enabled
-        state: directory
-        owner: root
-        group: root
-        mode: '0755'
-
-    - name: Deploy NGINX reverse proxy config
-      ansible.builtin.template:
-        src: configs/nginx_proxy.conf.j2
-        dest: "/etc/nginx/sites-available/{{ server_name }}"
+    - name: Copy NGINX config file
+      ansible.builtin.copy:
+        src: configs/nginx_http.conf
+        dest: /etc/nginx/nginx.conf
         owner: root
         group: root
         mode: '0644'
 
-    - name: Ensure sites-enabled symlink exists
-      ansible.builtin.file:
-        src: "/etc/nginx/sites-available/{{ server_name }}"
-        dest: "/etc/nginx/sites-enabled/{{ server_name }}"
-        state: link
-        force: yes
-
-    - name: Test NGINX configuration
-      ansible.builtin.command:
-        cmd: nginx -t
-      register: nginx_test
-      failed_when: "'successful' not in nginx_test.stderr"
-
     - name: Reload NGINX
-      ansible.builtin.service:
-        name: nginx
-        state: reloaded
+      ansible.builtin.shell: nginx -t && systemctl reload nginx
 
     - name: Create Certbot virtual environment directory
       ansible.builtin.file:
@@ -113,16 +64,16 @@
         state: link
         force: yes
 
-    - name: Obtain and install SSL certificate using Certbot
+    - name: Obtain and install SSL certificate using Certbot (interactive step)
       ansible.builtin.command:
-        cmd: certbot --nginx --non-interactive --agree-tos -m "{{ cert_email }}" -d "{{ server_name }}"
+        cmd: certbot --nginx --non-interactive --agree-tos -m vince3sen@gmail.com -d www16.htf25.qubr.be
       register: certbot_result
       changed_when: "'Congratulations' in certbot_result.stdout"
 
     - name: Add Certbot auto-renew cron job
       ansible.builtin.lineinfile:
         path: /etc/crontab
-        line: "0 0,12 * * * root /opt/certbot/bin/python -c 'import random; import time; time.sleep(random.random() * 3600)' && certbot renew -q"
+        line: "0 0,12 * * * root /opt/certbot/bin/python -c 'import random; import time; time.sleep(random.random() * 3600)' && sudo certbot renew -q"
         create: yes
         state: present
 
@@ -171,6 +122,7 @@
     - name: Pull web-app image
       containers.podman.podman_image:
         name: ghcr.io/daanhollands/htf-2025:latest
+        pull: true
 
     - name: Ensure web-app container is running
       containers.podman.podman_container:
