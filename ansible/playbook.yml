@@ -118,7 +118,7 @@
       ansible.builtin.service:
         name: nginx
         state: reloaded
-        
+
     - name: Pull web-app image
       containers.podman.podman_image:
         name: ghcr.io/daanhollands/htf-2025:latest
