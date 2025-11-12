@@ -26,7 +26,7 @@ jobs:
 
       - name: Build Podman container
         run: |
-          podman build -t ghcr.io/${{ github.repository_owner }}/myapp:latest .
+          podman build -t ghcr.io/${{ github.repository_owner }}/htf2025:latest ./website
 
       - name: Push container to GitHub Packages
         run: |
