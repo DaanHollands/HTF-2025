@@ -30,4 +30,4 @@ jobs:
 
       - name: Push container to GitHub Packages
         run: |
-          podman push ghcr.io/${{ github.repository_owner }}/myapp:latest
+          podman push ghcr.io/${{ github.repository_owner }}/htf2025:latest
