@@ -42,8 +42,6 @@
 
 #     - name: Reload NGINX
 #       ansible.builtin.shell: nginx -t && systemctl reload nginx
-
----
 - name: Install and configure Certbot with NGINX
   hosts: webservers
   become: true
