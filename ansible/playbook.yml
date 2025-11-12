@@ -120,16 +120,15 @@
         state: reloaded
 
     - name: Pull web-app image
-      containers.podman.podman_image:
-        name: ghcr.io/daanhollands/htf-2025:latest
-        pull: true
+      ansible.builtin.cmd:
+        cmd: podman pull ghcr.io/daanhollands/htf-2025:latest
 
-    - name: Ensure web-app container is running
-      containers.podman.podman_container:
-        name: htf-2025
-        image: ghcr.io/daanhollands/htf-2025:latest
-        state: started
-        restart_policy: unless-stopped
-        detach: true
-        ports:
-          - "3000:3000"
+    # - name: Ensure web-app container is running
+    #   containers.podman.podman_container:
+    #     name: htf-2025
+    #     image: ghcr.io/daanhollands/htf-2025:latest
+    #     state: started
+    #     restart_policy: unless-stopped
+    #     detach: true
+    #     ports:
+    #       - "3000:3000"
