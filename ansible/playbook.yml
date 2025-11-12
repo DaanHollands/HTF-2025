@@ -125,3 +125,60 @@
         line: "0 0,12 * * * root /opt/certbot/bin/python -c 'import random; import time; time.sleep(random.random() * 3600)' && certbot renew -q"
         create: yes
         state: present
+
+    - name: Ensure NGINX sites-available directory exists
+      ansible.builtin.file:
+        path: /etc/nginx/sites-available
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Ensure NGINX sites-enabled directory exists
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Ensure sites-enabled default symlink exists
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/default
+        dest: /etc/nginx/sites-enabled/default
+        state: link
+        force: yes
+
+    - name: Deploy NGINX config from template
+      ansible.builtin.template:
+        src: configs/nginx.conf.j2
+        dest: /etc/nginx/sites-available/default
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Test NGINX configuration
+      ansible.builtin.command:
+        cmd: nginx -t
+      register: nginx_test
+      failed_when: "'successful' not in nginx_test.stderr"
+
+    - name: Reload NGINX
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+
+    - name: Pull web-app image
+      containers.podman.podman_image:
+        name: ghcr.io/daanhollands/htf-2025:latest
+        pull: true
+
+    - name: Ensure web-app container is running
+      containers.podman.podman_container:
+        name: htf-2025
+        image: ghcr.io/daanhollands/htf-2025:latest
+        state: started
+        restart_policy: unless-stopped
+        detach: true
+        ports:
+          - "3000:3000"
