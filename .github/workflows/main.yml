@@ -26,12 +26,12 @@ jobs:
 
       - name: Build Podman container
         run: |
-          repo_name=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          owner=$(echo "${{ github.actor }}" | tr '[:upper:]' '[:lower:]') # use personal namespace
+          repo_name=$(echo "${{ github.repository }}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
+          owner=$(echo "${{ github.repository }}" | cut -d'/' -f1 | tr '[:upper:]' '[:lower:]')
           podman build -t ghcr.io/$owner/$repo_name:latest ./website
-      
+
       - name: Push container
         run: |
-          repo_name=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          owner=${{ github.actor }}
+          repo_name=$(echo "${{ github.repository }}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
+          owner=$(echo "${{ github.repository }}" | cut -d'/' -f1 | tr '[:upper:]' '[:lower:]')
           podman push ghcr.io/$owner/$repo_name:latest
