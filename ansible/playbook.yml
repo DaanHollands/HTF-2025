@@ -33,11 +33,6 @@
         group: root
         mode: '0644'
 
-    - name: Ensure NGINX is running
-      ansible.builtin.service:
-        name: nginx
-        state: started
-
     - name: Reload NGINX
       ansible.builtin.shell: nginx -t && systemctl reload nginx
 
@@ -117,7 +112,7 @@
       ansible.builtin.command:
         cmd: nginx -t
       register: nginx_test
-      failed_when: "'successful' not in nginx_test.stdout"
+      failed_when: "'successful' not in nginx_test.stderr"
 
     - name: Reload NGINX
       ansible.builtin.service:
