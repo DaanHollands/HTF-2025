@@ -110,6 +110,13 @@
         group: root
         mode: '0644'
 
+    - name: Ensure sites-enabled default symlink exists
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/default
+        dest: /etc/nginx/sites-enabled/default
+        state: link
+        force: yes
+
     - name: Test NGINX configuration
       ansible.builtin.command:
         cmd: nginx -t
