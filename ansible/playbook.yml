@@ -30,7 +30,6 @@
         owner: root
         group: root
         mode: '0644'
-      notify: Reload NGINX
 
     - name: Ensure NGINX is running
       ansible.builtin.service:
