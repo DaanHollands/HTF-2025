@@ -1,0 +1,59 @@
+- name: Deploy SvelteKit SSR with Caddy Reverse Proxy
+  hosts: webservers
+  become: true
+  collections:
+    - containers.podman
+
+  vars:
+    packages:
+      - caddy
+      - podman
+
+  tasks:
+    - name: Install required packages
+      ansible.builtin.package:
+        name: "{{ packages }}"
+        state: present
+
+    - name: Ensure Caddy is enabled and started
+      ansible.builtin.service:
+        name: caddy
+        state: started
+        enabled: true
+
+    - name: Deploy Caddyfile
+      ansible.builtin.copy:
+        dest: /etc/caddy/Caddyfile
+        content: |
+          www16.htf25.qubr.be {
+              encode gzip
+              reverse_proxy 127.0.0.1:3000 {
+                  header_up Host {host}
+                  header_up X-Real-IP {remote}
+                  header_up X-Forwarded-For {remote}
+                  header_up X-Forwarded-Proto {scheme}
+              }
+          }
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Reload Caddy
+      ansible.builtin.service:
+        name: caddy
+        state: reloaded
+
+    - name: Pull SvelteKit web app image
+      containers.podman.podman_image:
+        name: ghcr.io/daanhollands/htf-2025:latest
+        pull: true
+
+    - name: Run SvelteKit container
+      containers.podman.podman_container:
+        name: htf-2025
+        image: ghcr.io/daanhollands/htf-2025:latest
+        state: started
+        restart_policy: unless-stopped
+        detach: true
+        ports:
+          - "3000:3000"
