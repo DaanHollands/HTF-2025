@@ -90,33 +90,24 @@
         create: yes
         state: present
 
-- name: Deploy web-app image (public)
+- name: Deploy web-app container with Podman
   hosts: webservers
   become: true
+  collections:
+    - community.general
+
   tasks:
-
     - name: Pull web-app image
-      ansible.builtin.command:
-        cmd: podman pull ghcr.io/daanhollands/htf-2025:latest
+      community.general.podman_image:
+        name: ghcr.io/daanhollands/htf-2025:latest
+        state: present
 
-    - name: Stop existing container if running
-      ansible.builtin.command:
-        cmd: podman ps -q -f name=htf-2025
-
-    - name: Stop container if it exists
-      ansible.builtin.command:
-        cmd: podman stop htf-2025
-
-    - name: Remove container if it exists
-      ansible.builtin.command:
-        cmd: podman rm htf-2025
-
-    - name: Run web-app container
-      ansible.builtin.command:
-        cmd: >
-          podman run -d
-          --name htf-2025
-          -p 80:3000
-          --restart unless-stopped
-          ghcr.io/daanhollands/htf-2025:latest
-      when: running_container.stdout == ""
+    - name: Ensure web-app container is running
+      community.general.podman_container:
+        name: htf-2025
+        image: ghcr.io/daanhollands/htf-2025:latest
+        state: started
+        restart_policy: unless-stopped
+        detach: true
+        ports:
+          - "80:3000"
