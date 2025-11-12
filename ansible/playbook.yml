@@ -171,7 +171,6 @@
     - name: Pull web-app image
       containers.podman.podman_image:
         name: ghcr.io/daanhollands/htf-2025:latest
-        pull: true
 
     - name: Ensure web-app container is running
       containers.podman.podman_container:
