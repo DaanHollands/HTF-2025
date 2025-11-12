@@ -12,7 +12,7 @@
 
     onMount(() => {
         ctx = canvas.getContext("2d");
-        socket = new WebSocket("ws://" + window.location.hostname + ":8080");
+        socket = new WebSocket("wss://" + window.location.hostname + "/ws");
 
         socket.onopen = () => console.log("✅ Connected to WebSocket server");
         socket.onerror = (e) => console.error("❌ WebSocket error", e);
