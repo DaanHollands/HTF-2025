@@ -5,6 +5,10 @@
     packages:
       - nginx
       - podman
+      - python3 
+      - python-devel 
+      - augeas-devel 
+      - gcc
 
   tasks:
     - name: Ensure required packages are installed
@@ -18,23 +22,79 @@
         name: nginx
         state: started
 
-- name: Deploy NGINX configuration
+# - name: Deploy NGINX configuration
+#   hosts: webservers
+#   become: true
+
+#   tasks:
+#     - name: Copy NGINX config file
+#       ansible.builtin.copy:
+#         src: configs/nginx.conf
+#         dest: /etc/nginx/nginx.conf
+#         owner: root
+#         group: root
+#         mode: '0644'
+
+#     - name: Ensure NGINX is running
+#       ansible.builtin.service:
+#         name: nginx
+#         state: started
+
+#     - name: Reload NGINX
+#       ansible.builtin.shell: nginx -t && systemctl reload nginx
+
+---
+- name: Install and configure Certbot with NGINX
   hosts: webservers
   become: true
-
   tasks:
-    - name: Copy NGINX config file
-      ansible.builtin.copy:
-        src: configs/nginx.conf
-        dest: /etc/nginx/nginx.conf
+
+    - name: Ensure required system packages are installed
+      ansible.builtin.apt:
+        name:
+          - python3
+          - python3-venv
+          - python3-pip
+        state: present
+        update_cache: yes
+
+    - name: Create Certbot virtual environment directory
+      ansible.builtin.file:
+        path: /opt/certbot
+        state: directory
         owner: root
         group: root
-        mode: '0644'
+        mode: '0755'
 
-    - name: Ensure NGINX is running
-      ansible.builtin.service:
-        name: nginx
-        state: started
+    - name: Create Python virtual environment for Certbot
+      ansible.builtin.command:
+        cmd: python3 -m venv /opt/certbot/
+        creates: /opt/certbot/bin/activate
 
-    - name: Reload NGINX
-      ansible.builtin.shell: nginx -t && systemctl reload nginx
+    - name: Upgrade pip in virtual environment
+      ansible.builtin.command:
+        cmd: /opt/certbot/bin/pip install --upgrade pip
+
+    - name: Install Certbot and NGINX plugin
+      ansible.builtin.command:
+        cmd: /opt/certbot/bin/pip install certbot certbot-nginx
+
+    - name: Create symlink for Certbot binary
+      ansible.builtin.file:
+        src: /opt/certbot/bin/certbot
+        dest: /usr/bin/certbot
+        state: link
+        force: yes
+
+    - name: Obtain and install SSL certificate using Certbot (interactive step)
+      ansible.builtin.command:
+        cmd: certbot --nginx --non-interactive --agree-tos -m test@test.test -d www16.htf25.qubr.be
+      register: certbot_result
+      changed_when: "'Congratulations' in certbot_result.stdout"
+
+    - name: Add Certbot auto-renew cron job
+      ansible.builtin.lineinfile:
+        path: /etc/crontab
+        line: "0 0,12 * * * root /opt/certbot/bin/python -c 'import random; import time; time.sleep(random.random() * 3600)' && sudo certbot renew -q"
+        create: yes
+        state: present
