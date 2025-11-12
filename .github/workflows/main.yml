@@ -1,0 +1,33 @@
+name: Build and Push Podman Container to GitHub Packages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Podman
+        run: |
+          sudo apt update
+          sudo apt install -y podman
+
+      - name: Login to GitHub Container Registry
+        env:
+          CR_PAT: ${{ secrets.GITHUB_TOKEN }}  # or a PAT with write:packages scope
+        run: |
+          echo $CR_PAT | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build Podman container
+        run: |
+          podman build -t ghcr.io/${{ github.repository_owner }}/myapp:latest .
+
+      - name: Push container to GitHub Packages
+        run: |
+          podman push ghcr.io/${{ github.repository_owner }}/myapp:latest
