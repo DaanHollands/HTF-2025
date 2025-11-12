@@ -90,6 +90,29 @@
         create: yes
         state: present
 
+- name: Configure NGINX as reverse proxy
+  hosts: webservers
+  become: true
+  tasks:
+    - name: Copy NGINX config from template
+      ansible.builtin.template:
+        src: configs/nginx.conf.j2
+        dest: /etc/nginx/sites-available/default
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Test NGINX configuration
+      ansible.builtin.command:
+        cmd: nginx -t
+      register: nginx_test
+      failed_when: "'successful' not in nginx_test.stdout"
+
+    - name: Reload NGINX
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+
 - name: Deploy web-app container with Podman
   hosts: webservers
   become: true
@@ -110,4 +133,4 @@
         restart_policy: unless-stopped
         detach: true
         ports:
-          - "80:3000"
+          - "3000:3000"
