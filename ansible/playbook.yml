@@ -120,7 +120,7 @@
         state: reloaded
 
     - name: Pull web-app image
-      ansible.builtin.cmd:
+      ansible.builtin.command:
         cmd: podman pull ghcr.io/daanhollands/htf-2025:latest
 
     # - name: Ensure web-app container is running
