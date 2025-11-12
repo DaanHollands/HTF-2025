@@ -54,7 +54,6 @@
           - python3-venv
           - python3-pip
         state: present
-        tags: packages
 
     - name: Create Certbot virtual environment directory
       ansible.builtin.file:
