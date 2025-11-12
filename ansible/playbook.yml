@@ -98,12 +98,12 @@
 
   tasks:
     - name: Pull web-app image
-      community.general.podman_image:
+      containers.podman.podman_image:
         name: ghcr.io/daanhollands/htf-2025:latest
         state: present
 
     - name: Ensure web-app container is running
-      community.general.podman_container:
+      containers.podman.podman_container:
         name: htf-2025
         image: ghcr.io/daanhollands/htf-2025:latest
         state: started
