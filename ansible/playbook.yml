@@ -89,3 +89,24 @@
         line: "0 0,12 * * * root /opt/certbot/bin/python -c 'import random; import time; time.sleep(random.random() * 3600)' && sudo certbot renew -q"
         create: yes
         state: present
+
+- name: Deploy web-app image
+  hosts: webservers
+  become: false
+  tasks:
+    - name: Pull web-app image
+      become: true
+      community.general.podman_image:
+        name: ghcr.io/daanhollands/htf-2025:latest
+        state: present
+
+    - name: Ensure web-app container is running
+      become: true
+      community.general.podman_container:
+        name: htf-2025
+        image: ghcr.io/daanhollands/htf-2025:latest
+        state: started
+        restart_policy: unless-stopped
+        detach: true
+        ports:
+          - "80:3000"
