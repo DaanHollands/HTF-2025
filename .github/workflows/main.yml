@@ -8,10 +8,14 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        
 
       - name: Install Podman
         run: |
@@ -20,18 +24,18 @@ jobs:
 
       - name: Login to GitHub Container Registry
         env:
-          CR_PAT: ${{ secrets.GITHUB_TOKEN }}  # or a PAT with write:packages scope
+          CR_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo $CR_PAT | podman login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build Podman container
         run: |
-          repo_name=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          repo_name=$(echo "${{ github.repository }}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
+          owner=$(echo "${{ github.repository }}" | cut -d'/' -f1 | tr '[:upper:]' '[:lower:]')
           podman build -t ghcr.io/$owner/$repo_name:latest ./website
-      
+
       - name: Push container
         run: |
-          repo_name=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          repo_name=$(echo "${{ github.repository }}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
+          owner=$(echo "${{ github.repository }}" | cut -d'/' -f1 | tr '[:upper:]' '[:lower:]')
           podman push ghcr.io/$owner/$repo_name:latest
