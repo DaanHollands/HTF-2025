@@ -20,18 +20,18 @@ jobs:
 
       - name: Login to GitHub Container Registry
         env:
-          CR_PAT: ${{ secrets.GITHUB_TOKEN }}  # or a PAT with write:packages scope
+          CR_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo $CR_PAT | podman login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build Podman container
         run: |
           repo_name=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          owner=${{ github.actor }}  # use personal namespace
           podman build -t ghcr.io/$owner/$repo_name:latest ./website
       
       - name: Push container
         run: |
           repo_name=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          owner=${{ github.actor }}
           podman push ghcr.io/$owner/$repo_name:latest
