@@ -23,26 +23,28 @@
         name: nginx
         state: started
 
-# - name: Deploy NGINX configuration
-#   hosts: webservers
-#   become: true
+- name: Deploy NGINX configuration
+  hosts: webservers
+  become: true
 
-#   tasks:
-#     - name: Copy NGINX config file
-#       ansible.builtin.copy:
-#         src: configs/nginx.conf
-#         dest: /etc/nginx/nginx.conf
-#         owner: root
-#         group: root
-#         mode: '0644'
+  tasks:
+    - name: Copy NGINX config file
+      ansible.builtin.copy:
+        src: configs/nginx_http.conf
+        dest: /etc/nginx/nginx.conf
+        owner: root
+        group: root
+        mode: '0644'
 
-#     - name: Ensure NGINX is running
-#       ansible.builtin.service:
-#         name: nginx
-#         state: started
+    - name: Ensure NGINX is running
+      ansible.builtin.service:
+        name: nginx
+        state: started
 
-#     - name: Reload NGINX
-#       ansible.builtin.shell: nginx -t && systemctl reload nginx
+    - name: Reload NGINX
+      ansible.builtin.shell: nginx -t && systemctl reload nginx
+
+
 - name: Install and configure Certbot with NGINX
   hosts: webservers
   become: true
