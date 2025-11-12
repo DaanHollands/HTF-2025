@@ -1,0 +1,23 @@
+- name: Install nginx
+  hosts: all
+  become: true
+  vars:
+    nginx_package: nginx
+
+  tasks:
+    - name: Install nginx package
+      package:
+        name: "{{ nginx_package }}"
+        state: present
+
+- name: Install Podman
+  hosts: all
+  become: true
+  vars:
+    podman_package: podman
+  
+  tasks:
+    - name: Install Podman package
+      package:
+        name: "{{ podman_package }}"
+        state: present
